@@ -3,6 +3,7 @@
 Cargo.lock
 .idea/
 .vscode/
+/.direnv
 
 *.iml
 steamworks-sys/lib/steam/*
