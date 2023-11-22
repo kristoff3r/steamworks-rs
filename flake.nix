@@ -30,8 +30,7 @@
           buildInputs = [ rust clang protobuf openssl pkg-config  ];
           PROTOC = "${protobuf}/bin/protoc";
           LIBCLANG_PATH = "${llvmPackages.libclang.lib}/lib";
-          LD_LIBRARY_PATH =
-            lib.makeLibraryPath [ clangStdenv.cc.cc.lib openssl protobuf ];
+          LD_LIBRARY_PATH = lib.makeLibraryPath [ protobuf ];
           CPLUS_INCLUDE_PATH = "${openssl.dev}/include";
         };
       });

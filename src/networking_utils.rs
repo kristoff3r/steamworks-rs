@@ -6,6 +6,11 @@ use std::sync::Arc;
 
 use steamworks_sys as sys;
 
+#[cfg(target_arch = "aarch64")]
+type MsgPtr = *const u8;
+#[cfg(target_arch = "x86_64")]
+type MsgPtr = *const i8;
+
 /// Access to the steam networking sockets interface
 pub struct NetworkingUtils<Manager> {
     pub(crate) utils: *mut sys::ISteamNetworkingUtils,
@@ -108,6 +113,26 @@ impl<Manager> NetworkingUtils<Manager> {
             register_callback(&self.inner, move |status: RelayNetworkStatusCallback| {
                 callback(status.status);
             });
+        }
+    }
+
+    #[inline]
+    pub fn enable_debug_output(
+        &self,
+        ty: sys::ESteamNetworkingSocketsDebugOutputType,
+        f: fn(ty: sys::ESteamNetworkingSocketsDebugOutputType, msg: String),
+    ) {
+        static mut F: Option<fn(ty: sys::ESteamNetworkingSocketsDebugOutputType, msg: String)> =
+            None;
+        unsafe {
+            F = Some(f);
+        }
+        #[allow(improper_ctypes_definitions)]
+        unsafe extern "C" fn debug(ty: sys::ESteamNetworkingSocketsDebugOutputType, msg: MsgPtr) {
+            F.unwrap()(ty, CStr::from_ptr(msg).to_string_lossy().to_string());
+        }
+        unsafe {
+            sys::SteamAPI_ISteamNetworkingUtils_SetDebugOutputFunction(self.utils, ty, Some(debug));
         }
     }
 }
